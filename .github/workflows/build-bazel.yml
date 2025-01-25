@@ -1,0 +1,78 @@
+name: Build Bazel from scratch
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build-bazel:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+    steps:
+      # 1) Récupération du code du repository
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+        # 1) Installe Java 21
+      - name: Set up Java 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install dependencies
+        run: |
+          # Installe dnf-plugins-core pour config-manager
+          dnf -y install dnf-plugins-core
+          # Active le dépôt CRB
+          dnf config-manager --set-enabled crb
+          dnf makecache
+          dnf -y update
+
+          dnf -y install \
+            glibc-static \
+            libstdc++-static \
+            gcc \
+            gcc-c++ \
+            make \
+            python3 \
+            unzip \
+            zip \
+            patch
+
+          dnf -y install java-21-openjdk-devel
+
+      # 3) Téléchargement de l'archive de distribution Bazel
+      - name: Download Bazel distribution
+        run: |
+          curl -LO https://github.com/bazelbuild/bazel/releases/download/7.2.0/bazel-7.2.0-dist.zip
+
+      # 4) Décompression de l’archive
+      - name: Unzip Bazel distribution
+        run: unzip bazel-7.2.0-dist.zip -d bazel-dist
+      
+      - name: Apply local patch
+        run: |
+          patch -p1 -d bazel-dist < patches/sbom_patch.diff
+
+      # 5) Compilation de Bazel
+      - name: Build Bazel
+        run: |
+          cd bazel-dist
+          export SOURCE_DATE_EPOCH=$(date +%s)
+          env EXTRA_BAZEL_ARGS="--linkopt=-static --linkopt=-static-libgcc --linkopt=-static-libstdc++ --tool_java_runtime_version=local_jdk" \
+            bash ./compile.sh
+      # 6) Vérification de la version Bazel compilée
+      - name: Test bazel version
+        run: |
+          ./bazel-dist/output/bazel version
+
+      # 7) Publier le binaire compilé comme artefact sur GitHub
+      - name: Upload Bazel artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bazel-binary
+          path: bazel-dist/output/bazel
+
