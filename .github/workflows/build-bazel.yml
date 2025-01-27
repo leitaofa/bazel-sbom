@@ -56,13 +56,14 @@ jobs:
       - name: Apply local patch
         run: |
           patch -p1 -d bazel-dist < patches/sbom_patch.diff
+          patch -p1 -d bazel-dist < patches/my_bazel_patch2.diff
 
       # 5) Compilation de Bazel
       - name: Build Bazel
         run: |
           cd bazel-dist
           export SOURCE_DATE_EPOCH=$(date +%s)
-          env EXTRA_BAZEL_ARGS="--linkopt=-static --linkopt=-static-libgcc --linkopt=-static-libstdc++ --tool_java_runtime_version=local_jdk" \
+          env EXTRA_BAZEL_ARGS="--linkopt=-static --linkopt=-static-libgcc --linkopt=-static-libstdc++" \
             bash ./compile.sh
       # 6) Vérification de la version Bazel compilée
       - name: Test bazel version
@@ -71,7 +72,7 @@ jobs:
 
       # 7) Publier le binaire compilé comme artefact sur GitHub
       - name: Upload Bazel artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bazel-binary
           path: bazel-dist/output/bazel

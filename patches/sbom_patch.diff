@@ -1,5 +1,5 @@
 diff --git a/tools/compliance/sbom.bzl b/tools/compliance/sbom.bzl
-index 9f8845a..de44303 100644
+index 9f8845a..de44303 100755
 --- a/tools/compliance/sbom.bzl
 +++ b/tools/compliance/sbom.bzl
 @@ -21,8 +21,16 @@ def _sbom_impl(ctx):
@@ -105,7 +105,7 @@ index 9f8845a..de44303 100644
 +            maven_install = maven_install,
 +        )
 diff --git a/tools/compliance/write_sbom.py b/tools/compliance/write_sbom.py
-index f2a781f..e1c9db0 100644
+index f2a781f..e1c9db0 100755
 --- a/tools/compliance/write_sbom.py
 +++ b/tools/compliance/write_sbom.py
 @@ -19,7 +19,8 @@ Inputs:
